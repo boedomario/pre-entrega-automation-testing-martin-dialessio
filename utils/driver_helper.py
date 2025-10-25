@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
+
 def setup_driver(headless=False):
     """
     Configura y devuelve un Chrome WebDriver (maximizado).
@@ -15,5 +16,5 @@ def setup_driver(headless=False):
 
     service = Service()  # Usa chromedriver del PATH o Chrome for Testing
     driver = webdriver.Chrome(service=service, options=chrome_options)
-    driver.maximize_window()
+    driver.set_window_size(1920, 1080)
     return driver

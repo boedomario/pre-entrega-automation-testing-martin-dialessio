@@ -24,12 +24,13 @@ def logged_in_driver(driver):
     wait = WebDriverWait(driver, 10)
     driver.get(BASE_URL)
 
-    wait.until(EC.visibility_of_element_located(SauceLocators.USERNAME_INPUT)).send_keys(USER)
+    wait.until(EC.visibility_of_element_located(
+        SauceLocators.USERNAME_INPUT)).send_keys(USER)
     driver.find_element(*SauceLocators.PASSWORD_INPUT).send_keys(PASS)
     driver.find_element(*SauceLocators.LOGIN_BUTTON).click()
 
-    wait.until(EC.url_contains("/inventory.html"))
     wait.until(EC.visibility_of_element_located(SauceLocators.PAGE_TITLE))
+
     yield driver
 
 # Test de login
@@ -39,29 +40,38 @@ def test_login_exitoso(driver):
     wait = WebDriverWait(driver, 10)
     driver.get(BASE_URL)
 
-    wait.until(EC.visibility_of_element_located(SauceLocators.USERNAME_INPUT)).send_keys(USER)
+    wait.until(EC.visibility_of_element_located(
+        SauceLocators.USERNAME_INPUT)).send_keys(USER)
     driver.find_element(*SauceLocators.PASSWORD_INPUT).send_keys(PASS)
     driver.find_element(*SauceLocators.LOGIN_BUTTON).click()
 
     wait.until(EC.url_contains("/inventory.html"))
-    title = wait.until(EC.visibility_of_element_located(SauceLocators.PAGE_TITLE)).text
-
     assert "/inventory.html" in driver.current_url
+
+    title = wait.until(EC.visibility_of_element_located(
+        SauceLocators.PAGE_TITLE)).text
     assert title == "Products"
     print("Login exitoso y pagina de inventario visible.")
 
 # Test de catalogo
+
+
 @pytest.mark.catalogo
 def test_verificacion_catalogo(logged_in_driver):
     """Verifica que el catalogo se cargue y muestre los productos."""
     driver = logged_in_driver
+    wait = WebDriverWait(driver, 10)
+
     assert driver.find_element(*SauceLocators.PAGE_TITLE).text == "Products"
 
     products = driver.find_elements(*SauceLocators.INVENTORY_ITEM)
     assert len(products) > 0, "No se encontraron productos"
 
-    name = driver.find_element(*SauceLocators.FIRST_ITEM_NAME).text
-    price = driver.find_element(*SauceLocators.FIRST_ITEM_PRICE).text
+    name = wait.until(EC.visibility_of_element_located(
+        SauceLocators.FIRST_ITEM_NAME)).text
+    price = wait.until(EC.visibility_of_element_located(
+        SauceLocators.FIRST_ITEM_PRICE)).text
+    print(f"🛍️ Primer producto -> {name} | {price}")
 
     assert name and price, "Nombre o precio vacio"
     print(f"Primer producto: {name} - Precio: {price}")
@@ -73,18 +83,22 @@ def test_agregar_producto_y_verificar(logged_in_driver):
     driver = logged_in_driver
     wait = WebDriverWait(driver, 10)
 
-    wait.until(EC.visibility_of_element_located(SauceLocators.INVENTORY_ITEM))
-    first_name = driver.find_element(*SauceLocators.FIRST_ITEM_NAME).text
-    first_price = driver.find_element(*SauceLocators.FIRST_ITEM_PRICE).text
+    first_name_element = wait.until(
+        EC.visibility_of_element_located(SauceLocators.FIRST_ITEM_NAME))
+    first_name = first_name_element.text
+    first_price = wait.until(EC.visibility_of_element_located(
+        SauceLocators.FIRST_ITEM_PRICE)).text
 
     driver.find_element(*SauceLocators.FIRST_ADD_TO_CART_BTN).click()
-    badge = wait.until(EC.visibility_of_element_located(SauceLocators.CART_BADGE))
+    badge = wait.until(EC.visibility_of_element_located(
+        SauceLocators.CART_BADGE))
     assert badge.text == "1"
 
     driver.find_element(*SauceLocators.CART_LINK).click()
-    cart_name = wait.until(EC.visibility_of_element_located(SauceLocators.ITEM_IN_CART_NAME)).text
+    cart_name = wait.until(EC.visibility_of_element_located(
+        SauceLocators.ITEM_IN_CART_NAME)).text
     cart_price = driver.find_element(*SauceLocators.ITEM_IN_CART_PRICE).text
 
-    assert cart_name == first_name, "El nombre del producto no coincide"
-    assert cart_price == first_price, "El precio del producto no coincide"
-    print(f"Producto agregado correctamente: {cart_name}")
+    assert cart_name == first_name, "El producto en el carrito no coincide"
+    assert cart_price == first_price, "El precio en el carrito no coincide"
+    print(f"{cart_name} agregado correctamente al carrito.")
